@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package extauthz
+package routes
 
 import (
 	"encoding/json"
@@ -48,7 +48,7 @@ func ReadRoutesFile(routeFile string) error {
 	return nil
 }
 
-func getRoute(basePath string) (backend string, prefix string, notFound bool) {
+func GetRoute(basePath string) (backend string, prefix string, notFound bool) {
 	common.Info.Printf("basepath %s", basePath)
 
 	for _, routeRule := range routeInfo.RouteRules {
@@ -63,7 +63,7 @@ func getRoute(basePath string) (backend string, prefix string, notFound bool) {
 	return "", "", false
 }
 
-func replacePrefix(basePath string, prefix string) string {
+func ReplacePrefix(basePath string, prefix string) string {
 	common.Info.Printf("replace %s, %s", basePath, strings.Replace(basePath, prefix, "", 1))
 	return strings.Replace(basePath, prefix, "", 1)
 }

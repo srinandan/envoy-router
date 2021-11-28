@@ -23,6 +23,8 @@ import (
 	"time"
 
 	extauthz "github.com/srinandan/envoy-router/server/extauthz"
+	extproc "github.com/srinandan/envoy-router/server/extproc"
+	routes "github.com/srinandan/envoy-router/server/routes"
 	common "github.com/srinandan/sample-apps/common"
 
 	"google.golang.org/grpc"
@@ -40,7 +42,7 @@ func main() {
 	flag.StringVar(&routeFile, "routes", "routes.json", "A file containing routes")
 	flag.Parse()
 
-	if err := extauthz.ReadRoutesFile(routeFile); err != nil {
+	if err := routes.ReadRoutesFile(routeFile); err != nil {
 		common.Error.Println("unable to load routing table: ", err)
 		os.Exit(1)
 	}
@@ -61,6 +63,9 @@ func serve() {
 
 	as := &extauthz.AuthorizationServer{}
 	as.Register(grpcServer)
+
+	ep := &extproc.ExternalProcessingServer{}
+	ep.Register(grpcServer)
 
 	// grpc health
 	grpcHealth := health.NewServer()
