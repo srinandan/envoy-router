@@ -1,3 +1,4 @@
+
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,39 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: skaffold/v1beta15
+apiVersion: skaffold/v2beta26
 kind: Config
 build:
   artifacts:      
   - image: envoy-router
-    context: server
-    custom:
-      buildCommand: podman build -f Dockerfile.server -t envoy-router .
-      dependencies:
-        dockerfile:
-          path: ./Dockerfile.server
+    docker:
+      cacheFrom: 
+        - golang:latest
+        - alpine:latest        
+  tagPolicy:
+      gitCommit: {}
+
 deploy:
   kubectl:
     flags:
       global: ["--namespace=apps"]
     manifests:
     - envoy-router.yaml
-# "gcb" profile allows building and pushing the images
-# on Google Container Builder without requiring docker
-# installed on the developer machine. However, note that
-# since GCB does not cache the builds, each build will
-# start from scratch and therefore take a long time.
-#
-# This is not used by default. To use it, run:
-#     skaffold run -p gcb
+
 profiles:
 - name: gcb
   build:
     googleCloudBuild:
-      diskSizeGb: 10
+      diskSizeGb: 100
       machineType: N1_HIGHCPU_8
-- name: local
-  build:
-    local:
-      useBuildkit: false
-      useDockerCLI: false

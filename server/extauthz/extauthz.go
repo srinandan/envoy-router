@@ -21,6 +21,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
+	routes "github.com/srinandan/envoy-router/server/routes"
 	rpcstatus "google.golang.org/genproto/googleapis/rpc/status"
 
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -67,8 +68,8 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 			common.Info.Println("Payload >> ", req.Attributes.Request.Http.Body)
 		}
 
-		if backend, prefix, found := getRoute(req.Attributes.Request.Http.Path); found {
-			basepath := replacePrefix(req.Attributes.Request.Http.Path, prefix)
+		if backend, prefix, found := routes.GetRoute(req.Attributes.Request.Http.Path); found {
+			basepath := routes.ReplacePrefix(req.Attributes.Request.Http.Path, prefix)
 			return checkResponse(backend, basepath), nil
 		} else {
 			return checkNotFoundResponse(), nil
