@@ -1,0 +1,24 @@
+{
+    "routerules" : [
+      {
+        "name": "mocktarget",
+        "prefix": "/iloveapis",
+        "backend": "mocktarget.apigee.net"
+      },
+      {
+        "name": "postman",
+        "prefix": "/postman",
+        "backend": "postman-echo.com"
+      },
+      {
+        "name": "httpbin",
+        "prefix": "/httpbin",
+        "backend": "httpbin.org"
+      },
+      {
+        "name": "default",
+        "prefix": "/httpbin",
+        "backend": "httpbin.org"
+      }
+    ]
+}

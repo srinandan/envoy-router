@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-router
+  namespace: apps
+  labels:
+    app: envoy-router
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5001
+    name: http
+    targetPort: 5001
+  selector:
+    app: envoy-router
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: envoy-router
+  name: envoy-router
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app: envoy-router
+  template:
+    metadata:
+      name: envoy-router
+    spec:
+      serviceAccountName: apps
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 20001
+        runAsGroup: 20000
+      containers:
+        - name: envoy-router
+          image: envoy-router
+          imagePullPolicy: Always
+          args:
+            - "-routes=/config/routes.json"
+          ports:
+            - containerPort: 5001
+              protocol: TCP
+              name: app
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: envoy-router-configuration
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: envoy-router-configuration
+          configMap:
+            name: envoy-router-configuration
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envoy-router-configuration
+  namespace: apps
+data:
+  routes.json: |
+    {
+        "routerules" : [
+          {
+            "name": "mocktarget",
+            "prefix": "/iloveapis",
+            "backend": "mocktarget.apigee.net"
+          },
+          {
+            "name": "postman",
+            "prefix": "/postman",
+            "backend": "postman-echo.com"
+          },
+          {
+            "name": "httpbin",
+            "prefix": "/httpbin",
+            "backend": "httpbin.org"
+          },
+          {
+            "name": "default",
+            "prefix": "/httpbin",
+            "backend": "httpbin.org"
+          }
+        ]
+    }
