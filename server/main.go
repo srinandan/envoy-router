@@ -74,7 +74,7 @@ func serve() {
 	common.Info.Println("starting gRPC Server at ", common.GetgRPCPort())
 
 	// grpc listener
-	grpcListener, err := net.Listen("tcp", common.GetgRPCPort())
+	grpcListener, err := net.Listen("tcp", ":"+common.GetgRPCPort())
 	if err != nil {
 		panic(err)
 	}

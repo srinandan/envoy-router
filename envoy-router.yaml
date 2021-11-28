@@ -8,9 +8,9 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - port: 5001
+  - port: 50051
     name: http
-    targetPort: 5001
+    targetPort: 50051
   selector:
     app: envoy-router
 ---
@@ -41,7 +41,7 @@ spec:
           args:
             - "-routes=/config/routes.json"
           ports:
-            - containerPort: 5001
+            - containerPort: 50051
               protocol: TCP
               name: app
           securityContext:

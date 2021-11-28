@@ -16,5 +16,5 @@ COPY --from=builder /go/bin/envoy-router .
 COPY --from=builder /etc/passwd /etc/group /etc/shadow /etc/
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 USER 20001
-EXPOSE 5001
+EXPOSE 50051
 CMD ["./envoy-router"]
