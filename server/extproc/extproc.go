@@ -79,7 +79,7 @@ func (e *ExternalProcessingServer) Process(srv proc.ExternalProcessor_ProcessSer
 }
 
 func processResponseHeaders(headers *proc.ProcessingRequest_ResponseHeaders) *proc.ProcessingResponse {
-	common.Info.Printf("ProcessingRequest_ResponseHeaders %v \n", headers)
+	common.Info.Printf("<<< ProcessingRequest_ResponseHeaders %v \n", headers)
 	resp := &proc.ProcessingResponse{}
 	var status int
 
@@ -117,7 +117,7 @@ func processResponseHeaders(headers *proc.ProcessingRequest_ResponseHeaders) *pr
 }
 
 func processRequestHeaders(headers *proc.ProcessingRequest_RequestHeaders) *proc.ProcessingResponse {
-	common.Info.Printf("ProcessingRequest_RequestHeaders %v \n", headers)
+	common.Info.Printf(">>> ProcessingRequest_RequestHeaders %v \n", headers)
 	resp := &proc.ProcessingResponse{}
 	var path string
 
@@ -161,13 +161,13 @@ func processRequestHeaders(headers *proc.ProcessingRequest_RequestHeaders) *proc
 
 func processRequestBody(body *proc.ProcessingRequest_RequestBody) *proc.ProcessingResponse {
 	resp := &proc.ProcessingResponse{}
-	common.Info.Printf("ProcessingRequest_RequestBody %v \n", body)
+	common.Info.Printf(">>> ProcessingRequest_RequestBody %v \n", body)
 	return resp
 }
 
 func processResponseBody(body *proc.ProcessingRequest_ResponseBody) *proc.ProcessingResponse {
 	resp := &proc.ProcessingResponse{}
-	common.Info.Printf("ProcessingRequest_ResponseBody %v \n", body)
+	common.Info.Printf("<<< ProcessingRequest_ResponseBody %v \n", body)
 	return resp
 }
 

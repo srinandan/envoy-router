@@ -47,16 +47,12 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 		req.Attributes.Request != nil &&
 		req.Attributes.Request.Http != nil &&
 		req.Attributes.Request.Http.Headers != nil {
-		if b, err := json.MarshalIndent(req.Attributes.Request.Http.Headers, "", "  "); err == nil {
-			common.Info.Println("Inbound Headers: ")
-			common.Info.Println((string(b)))
-		}
+		common.Info.Printf(">>>> ExtAuthz_Request_headers: %v \n", req.Attributes.Request.Http.Headers)
 	}
 
 	if req.Attributes != nil && req.Attributes.ContextExtensions != nil {
 		if ct, err := json.MarshalIndent(req.Attributes.ContextExtensions, "", "  "); err == nil {
-			common.Info.Println("Context Extensions: ")
-			common.Info.Println((string(ct)))
+			common.Info.Printf(">>>> Context Extensions: %s\n", string(ct))
 		}
 	}
 
@@ -65,7 +61,7 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 		req.Attributes.Request.Http != nil {
 
 		if req.Attributes.Request.Http.Body != "" {
-			common.Info.Println("Payload >> ", req.Attributes.Request.Http.Body)
+			common.Info.Printf(">>>> Payload: %s\n", req.Attributes.Request.Http.Body)
 		}
 
 		if backend, prefix, found := routes.GetRoute(req.Attributes.Request.Http.Path); found {
@@ -90,8 +86,8 @@ func checkNotFoundResponse() *auth.CheckResponse {
 }
 
 func checkResponse(backend string, basepath string) *auth.CheckResponse {
-	common.Info.Println("Selecting route ", backend, basepath)
 	common.Info.Println(">>> Authorization CheckResponse_OkResponse")
+	common.Info.Println(">>>> Selecting route ", backend, basepath)
 
 	return &auth.CheckResponse{
 		Status: &rpcstatus.Status{

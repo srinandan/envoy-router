@@ -53,7 +53,6 @@ func GetRoute(basePath string) (backend string, prefix string, notFound bool) {
 
 	for _, routeRule := range routeInfo.RouteRules {
 		matchStr := "^" + routeRule.Prefix + "(/[^/]+)*/?"
-		common.Info.Println(matchStr)
 		if ok, _ := regexp.MatchString(matchStr, basePath); ok {
 			common.Info.Printf("basepath found")
 			return routeRule.Backend, routeRule.Prefix, true
