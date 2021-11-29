@@ -49,20 +49,20 @@ func ReadRoutesFile(routeFile string) error {
 }
 
 func GetRoute(basePath string) (backend string, prefix string, notFound bool) {
-	common.Info.Printf("basepath %s", basePath)
+	common.Info.Printf(">>>>> basepath %s", basePath)
 
 	for _, routeRule := range routeInfo.RouteRules {
 		matchStr := "^" + routeRule.Prefix + "(/[^/]+)*/?"
 		if ok, _ := regexp.MatchString(matchStr, basePath); ok {
-			common.Info.Printf("basepath found")
+			common.Info.Printf(">>>>> basepath found")
 			return routeRule.Backend, routeRule.Prefix, true
 		}
 	}
-	common.Info.Printf("basepath not found")
+	common.Info.Printf(">>>>> basepath not found")
 	return "", "", false
 }
 
 func ReplacePrefix(basePath string, prefix string) string {
-	common.Info.Printf("replace %s, %s", basePath, strings.Replace(basePath, prefix, "", 1))
+	common.Info.Printf(">>>>> replace %s with %s", basePath, strings.Replace(basePath, prefix, "", 1))
 	return strings.Replace(basePath, prefix, "", 1)
 }
