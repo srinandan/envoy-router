@@ -1,0 +1,125 @@
+admin:
+  access_log_path: /dev/stdout
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 8000
+
+# listen on 8080 for api requests
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 8080
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: envoy-router
+          codec_type: AUTO
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: envoy-router
+              domains: ["*"]
+              routes:
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: dynamic_forward_proxy_cluster
+          http_filters:
+          # thie filter is meant to route requests to the right target. see github.com/srinandans/envoy-router
+          - name: envoy.filters.http.ext_authz
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+              transport_api_version: V3
+              with_request_body:
+                max_request_bytes: 1024
+                allow_partial_message: true
+              clear_route_cache: true
+              grpc_service:
+                google_grpc:
+                  target_uri: localhost:50051
+                  stat_prefix: envoy-router
+          - name: envoy.filters.http.dynamic_forward_proxy
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.dynamic_forward_proxy.v3.FilterConfig
+              dns_cache_config:
+                name: dynamic_forward_proxy_cache_config
+                dns_lookup_family: V4_ONLY
+                dns_resolution_config:
+                  resolvers:
+                  - socket_address:
+                      address: "8.8.8.8"
+                      port_value: 53
+                  dns_resolver_options:
+                    use_tcp_for_dns_lookups: true
+                    no_default_search_domain: true
+          - name: envoy.filters.http.ext_proc
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              failure_mode_allow: false
+              processing_mode:
+                request_header_mode: "SKIP"
+                response_header_mode: "SEND"
+                request_body_mode: "NONE"
+                response_body_mode: "NONE"
+                request_trailer_mode: "SKIP"
+                response_trailer_mode: "SKIP"
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: ext_proc_cluster
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+  - name: dynamic_forward_proxy_cluster
+    lb_policy: CLUSTER_PROVIDED
+    cluster_type:
+      name: envoy.clusters.dynamic_forward_proxy
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.clusters.dynamic_forward_proxy.v3.ClusterConfig
+        dns_cache_config:
+          name: dynamic_forward_proxy_cache_config
+          dns_lookup_family: V4_ONLY
+          dns_resolution_config:
+            resolvers:
+            - socket_address:
+                address: "8.8.8.8"
+                port_value: 53
+            dns_resolver_options:
+              use_tcp_for_dns_lookups: true
+              no_default_search_domain: true
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        common_tls_context:
+          validation_context:
+            trusted_ca: {filename: /etc/ssl/certs/ca-certificates.crt}
+
+  - name: ext_proc_cluster
+    type: STATIC
+    connect_timeout: 0.25s
+    http2_protocol_options: {}
+    load_assignment:
+      cluster_name: ext_proc_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: 127.0.0.1
+                port_value: 50051
+    health_checks:
+    - timeout: 1s
+      interval: 5s
+      interval_jitter: 1s
+      no_traffic_interval: 5s
+      unhealthy_threshold: 1
+      healthy_threshold: 3
+      grpc_health_check: {}

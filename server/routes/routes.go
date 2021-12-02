@@ -16,6 +16,7 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -43,6 +44,10 @@ func ReadRoutesFile(routeFile string) error {
 
 	if err = json.Unmarshal(routeListBytes, &routeInfo); err != nil {
 		return err
+	}
+
+	if len(routeInfo.RouteRules) < 1 {
+		return fmt.Errorf("routing table must have at least one route rule")
 	}
 
 	return nil

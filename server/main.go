@@ -27,39 +27,60 @@ import (
 	routes "github.com/srinandan/envoy-router/server/routes"
 	common "github.com/srinandan/sample-apps/common"
 
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/keepalive"
 )
 
 func main() {
-	var routeFile string
+	var routeFile, key, cert string
 
 	//init logging
 	common.InitLog()
 
 	flag.StringVar(&routeFile, "routes", "routes.json", "A file containing routes")
+	flag.StringVar(&key, "key", "", "A file containing the private key")
+	flag.StringVar(&cert, "cert", "", "A file containing the public key key")
 	flag.Parse()
 
 	if err := routes.ReadRoutesFile(routeFile); err != nil {
 		common.Error.Println("unable to load routing table: ", err)
 		os.Exit(1)
 	}
-	serve()
+
+	if (key != "" && cert == "") || (key == "" && cert != "") {
+		common.Error.Println("both key and cert must be specified")
+		os.Exit(1)
+	}
+
+	serve(key, cert)
 	select {}
 }
 
-func serve() {
+func serve(key string, cert string) {
 	// gRPC server
 	opts := []grpc.ServerOption{
 		grpc.KeepaliveParams(keepalive.ServerParameters{
 			MaxConnectionAge: 10 * time.Minute,
 		}),
 		grpc.MaxConcurrentStreams(10),
+		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+	}
+
+	if cert != "" && key != "" {
+		creds, err := credentials.NewServerTLSFromFile(cert, key)
+		if err != nil {
+			panic(err)
+		}
+		opts = append(opts, grpc.Creds(creds))
 	}
 
 	grpcServer := grpc.NewServer(opts...)
+	grpc_prometheus.Register(grpcServer)
 
 	as := &extauthz.AuthorizationServer{}
 	as.Register(grpcServer)

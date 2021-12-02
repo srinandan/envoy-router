@@ -26,7 +26,7 @@ spec:
     matchLabels:
       app: envoy-router
   template:
-    metadata:
+    metadata:     
       name: envoy-router
     spec:
       serviceAccountName: apps
