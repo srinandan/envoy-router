@@ -16,13 +16,19 @@
         "name": "httpbin",
         "prefix": "/httpbin",
         "backend": "httpbin.org",
+        "authentication": 0
+      },
+      {
+        "name": "integration",
+        "prefix": "/integrations",
+        "backend": "us-integrations.googleapis.com",
         "authentication": 1
       },
       {
         "name": "default",
         "prefix": "/httpbin",
         "backend": "httpbin.org",
-        "authentication": 1
+        "authentication": 0
       }
     ]
 }
