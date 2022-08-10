@@ -9,6 +9,10 @@ FROM envoyproxy/envoy:v1.22-latest
 COPY --from=builder /go/bin/envoy-router .
 COPY envoy.yaml /etc/envoy/envoy.yaml
 RUN chmod go+r /etc/envoy/envoy.yaml
-ENV DEBUG=true
+COPY entrypoint.sh /
+RUN chmod +x entrypoint.sh
+
+#ENV DEBUG=true
 EXPOSE 8080
-CMD ["./envoy-router"]
+
+ENTRYPOINT ["sh", "/entrypoint.sh"]
