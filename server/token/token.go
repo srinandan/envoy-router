@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -56,7 +57,7 @@ type AccessToken struct {
 
 var account = serviceAccount{}
 
-const tokenUri = "https://www.googleapis.com/oauth2/v4/token"
+const tokenUri = "https://oauth2.googleapis.com/token" //"https://www.googleapis.com/oauth2/v4/token"
 
 var serviceAccountPath string
 
@@ -166,7 +167,8 @@ func generateAccessToken(privateKey string) (string, error) {
 		return "", err
 	}
 
-	common.Info.Println("access token : ", accessToken)
+	common.Info.Println("access token object: ", accessToken)
+	common.Info.Println("access token: ", removeNonAlphaNumberic(accessToken.AccessToken))
 
 	return accessToken.AccessToken, nil
 }
@@ -281,4 +283,13 @@ func Every(duration time.Duration, work func(time.Time) bool) chan bool {
 	}()
 
 	return stop
+}
+
+func removeNonAlphaNumberic(nonAlphaString string) (alpha string) {
+	reg, err := regexp.Compile(`[\.]{2,}`)
+	if err != nil {
+		common.Error.Println(err)
+		return ""
+	}
+	return reg.ReplaceAllString(nonAlphaString, "")
 }
