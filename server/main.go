@@ -55,19 +55,14 @@ func main() {
 	//init logging
 	common.InitLog()
 
-	flag.StringVar(&routeFile, "routes", "routes.json", "A file containing routes")
+	flag.StringVar(&routeFile, "routes", defaultRoutesFile, "A file containing routes")
 	flag.StringVar(&key, "key", "", "A file containing the private key")
 	flag.StringVar(&cert, "cert", "", "A file containing the public key key")
 	flag.StringVar(&saFile, "sa", "", "GCP Service Account JSON file")
 	flag.Parse()
 
-	if routeFile == "" {
-		routeFile = defaultRoutesFile
-	}
-
 	if err := routes.ReadRoutesFile(routeFile); err != nil {
-		common.Error.Println("unable to load routing table: ", err)
-		os.Exit(1)
+		common.Error.Printf("unable to load routing table %s: %v\n", routeFile, err)
 	}
 
 	if (key != "" && cert == "") || (key == "" && cert != "") {
