@@ -56,7 +56,7 @@ type AccessToken struct {
 
 var account = serviceAccount{}
 
-const tokenUri = "https://oauth2.googleapis.com/token" //"https://www.googleapis.com/oauth2/v4/token"
+const tokenUri = "https://www.googleapis.com/oauth2/v4/token"
 
 var serviceAccountPath string
 
