@@ -26,7 +26,7 @@ import (
 func getGRPCPort() string {
 	port := os.Getenv("GRPC_PORT")
 	if port == "" {
-		return ":5000"
+		return ":50051"
 	}
 	return port
 }
@@ -43,10 +43,17 @@ func main() {
 
 	authorizationClient := auth.NewAuthorizationClient(conn)
 
+	callroute(ctx, authorizationClient, "/httpbin")
+	callroute(ctx, authorizationClient, "/postman")
+	callroute(ctx, authorizationClient, "/notfound")
+}
+
+func callroute(ctx context.Context, authorizationClient auth.AuthorizationClient, route string) {
+
 	checkRequest := auth.CheckRequest{}
 
 	http := auth.AttributeContext_HttpRequest{}
-	http.Path = "/httpbin"
+	http.Path = route
 
 	request := auth.AttributeContext_Request{}
 	request.Http = &http

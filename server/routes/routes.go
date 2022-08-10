@@ -24,10 +24,19 @@ import (
 	common "github.com/srinandan/sample-apps/common"
 )
 
+type Auth uint8
+
+const (
+	OFF Auth = iota
+	ACCESS_TOKEN
+	OIDC_TOKEN
+)
+
 type routerule struct {
-	Name    string `json:"name,omitempty"`
-	Backend string `json:"backend,omitempty"`
-	Prefix  string `json:"prefix,omitempty"`
+	Name           string `json:"name,omitempty"`
+	Backend        string `json:"backend,omitempty"`
+	Prefix         string `json:"prefix,omitempty"`
+	Authentication Auth   `json:"authentication,omitempty"`
 }
 
 type routeinfo struct {
@@ -53,18 +62,18 @@ func ReadRoutesFile(routeFile string) error {
 	return nil
 }
 
-func GetRoute(basePath string) (backend string, prefix string, notFound bool) {
+func GetRoute(basePath string) (backend string, prefix string, a Auth, notFound bool) {
 	common.Info.Printf(">>>>> basepath %s", basePath)
 
 	for _, routeRule := range routeInfo.RouteRules {
 		matchStr := "^" + routeRule.Prefix + "(/[^/]+)*/?"
 		if ok, _ := regexp.MatchString(matchStr, basePath); ok {
-			common.Info.Printf(">>>>> basepath found")
-			return routeRule.Backend, routeRule.Prefix, true
+			common.Info.Printf(">>>>> basepath found. authentication is %d\n", routeRule.Authentication)
+			return routeRule.Backend, routeRule.Prefix, routeRule.Authentication, true
 		}
 	}
-	common.Info.Printf(">>>>> basepath not found")
-	return "", "", false
+	common.Info.Printf(">>>>> basepath not found\n")
+	return "", "", OFF, false
 }
 
 func ReplacePrefix(basePath string, prefix string) string {

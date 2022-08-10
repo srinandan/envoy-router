@@ -1,0 +1,14 @@
+FROM golang:latest as builder
+ADD ./server /go/src/envoy-router/server
+WORKDIR /go/src/envoy-router/server
+ENV GO111MODULE=on
+RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -a -ldflags='-s -w -extldflags "-static"' -o /go/bin/envoy-router /go/src/envoy-router/server/main.go
+
+FROM envoyproxy/envoy:v1.22-latest
+COPY --from=builder /go/bin/envoy-router .
+COPY envoy.yaml /etc/envoy/envoy.yaml
+RUN chmod go+r /etc/envoy/envoy.yaml
+ENV DEBUG=true
+EXPOSE 8080
+CMD ["./envoy-router"]

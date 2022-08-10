@@ -129,7 +129,7 @@ func processRequestHeaders(headers *proc.ProcessingRequest_RequestHeaders) *proc
 	}
 
 	if routing == "true" {
-		if backend, prefix, found := routes.GetRoute(path); found {
+		if backend, prefix, _, found := routes.GetRoute(path); found {
 			basepath := routes.ReplacePrefix(path, prefix)
 			requestHeaders := &proc.HeadersResponse{
 				Response: &proc.CommonResponse{

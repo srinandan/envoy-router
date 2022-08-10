@@ -19,12 +19,14 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	extauthz "github.com/srinandan/envoy-router/server/extauthz"
 	extproc "github.com/srinandan/envoy-router/server/extproc"
 	routes "github.com/srinandan/envoy-router/server/routes"
+	token "github.com/srinandan/envoy-router/server/token"
 	common "github.com/srinandan/sample-apps/common"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -35,8 +37,20 @@ import (
 	"google.golang.org/grpc/keepalive"
 )
 
+//default file locations
+const defaultServiceAccountFilePath = "/etc/secrets/sa.json"
+const defaultRoutesFile = "/etc/routes/routes.json"
+
+//default interval to obtain new access tokens
+const interval = 25 * 60 //25 mins
+
+//use this flag to disable auth
+var disable_auth_envvar = os.Getenv("DISABLE_AUTH")
+var disable_auth bool
+
 func main() {
-	var routeFile, key, cert string
+	var routeFile, key, cert, saFile string
+	oauthtoken := token.AccessToken{}
 
 	//init logging
 	common.InitLog()
@@ -44,7 +58,12 @@ func main() {
 	flag.StringVar(&routeFile, "routes", "routes.json", "A file containing routes")
 	flag.StringVar(&key, "key", "", "A file containing the private key")
 	flag.StringVar(&cert, "cert", "", "A file containing the public key key")
+	flag.StringVar(&saFile, "sa", "", "GCP Service Account JSON file")
 	flag.Parse()
+
+	if routeFile == "" {
+		routeFile = defaultRoutesFile
+	}
 
 	if err := routes.ReadRoutesFile(routeFile); err != nil {
 		common.Error.Println("unable to load routing table: ", err)
@@ -56,11 +75,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	serve(key, cert)
+	if saFile != "" {
+		token.SetServiceAccountFilePath(saFile)
+	} else {
+		token.SetServiceAccountFilePath(defaultServiceAccountFilePath)
+	}
+
+	if disable_auth_envvar != "" {
+		disable_auth, _ = strconv.ParseBool(disable_auth_envvar)
+	}
+
+	if !disable_auth {
+		if err := oauthtoken.ObtainAccessToken(); err != nil {
+			common.Error.Println(err)
+		}
+	}
+
+	serve(key, cert, &oauthtoken)
 	select {}
 }
 
-func serve(key string, cert string) {
+func serve(key string, cert string, oauthtoken *token.AccessToken) {
 	// gRPC server
 	opts := []grpc.ServerOption{
 		grpc.KeepaliveParams(keepalive.ServerParameters{
@@ -120,4 +155,17 @@ func serve(key string, cert string) {
 		common.Info.Println("shutdown complete")
 		os.Exit(0)
 	}()
+
+	if !disable_auth {
+		//obtain a new token every 25 mins
+		stop := token.Every(interval*time.Second, func(time.Time) bool {
+			common.Info.Println("obtaining a new access token")
+			if err := oauthtoken.ObtainAccessToken(); err != nil {
+				common.Error.Println(err)
+			}
+			return true
+		})
+
+		<-stop
+	}
 }

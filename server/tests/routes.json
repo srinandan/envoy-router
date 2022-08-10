@@ -3,22 +3,26 @@
       {
         "name": "mocktarget",
         "prefix": "/iloveapis",
-        "backend": "mocktarget.apigee.net"
+        "backend": "mocktarget.apigee.net",
+        "authentication": 0
       },
       {
         "name": "postman",
         "prefix": "/postman",
-        "backend": "postman-echo.com"
+        "backend": "postman-echo.com",
+        "authentication": 0
       },
       {
         "name": "httpbin",
         "prefix": "/httpbin",
-        "backend": "httpbin.org"
+        "backend": "httpbin.org",
+        "authentication": 1
       },
       {
         "name": "default",
         "prefix": "/httpbin",
-        "backend": "httpbin.org"
+        "backend": "httpbin.org",
+        "authentication": 1
       }
     ]
 }

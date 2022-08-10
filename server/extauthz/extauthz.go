@@ -16,18 +16,20 @@ package extauthz
 
 import (
 	"encoding/json"
+	"strings"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	routes "github.com/srinandan/envoy-router/server/routes"
+	token "github.com/srinandan/envoy-router/server/token"
 	rpcstatus "google.golang.org/genproto/googleapis/rpc/status"
 
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/gogo/googleapis/google/rpc"
-	common "github.com/srinandan/sample-apps/common"
+	"github.com/srinandan/sample-apps/common"
 )
 
 // inspired by https://github.com/salrashid123/envoy_external_authz/blob/master/authz_server/grpc_server.go
@@ -64,9 +66,9 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 			common.Info.Printf(">>>> Payload: %s\n", req.Attributes.Request.Http.Body)
 		}
 
-		if backend, prefix, found := routes.GetRoute(req.Attributes.Request.Http.Path); found {
+		if backend, prefix, auth, found := routes.GetRoute(req.Attributes.Request.Http.Path); found {
 			basepath := routes.ReplacePrefix(req.Attributes.Request.Http.Path, prefix)
-			return checkResponse(backend, basepath), nil
+			return checkResponse(backend, basepath, auth), nil
 		} else {
 			return checkNotFoundResponse(), nil
 		}
@@ -85,9 +87,31 @@ func checkNotFoundResponse() *auth.CheckResponse {
 	}
 }
 
-func checkResponse(backend string, basepath string) *auth.CheckResponse {
+func checkResponse(backend string, basepath string, a routes.Auth) *auth.CheckResponse {
 	common.Info.Println(">>> Authorization CheckResponse_OkResponse")
-	common.Info.Println(">>>> Selecting route ", backend, basepath)
+	common.Info.Printf(">>>> Selecting route %s %s %d\n", backend, basepath, a)
+
+	var accessToken string
+
+	if a == routes.ACCESS_TOKEN {
+		common.Info.Println(">>>> Route has access token auth model")
+		oauthToken := token.AccessToken{}
+		if accessToken = oauthToken.GetAccessToken(); accessToken == "" {
+			if err := oauthToken.ObtainAccessToken(); err != nil {
+				common.Error.Println(err)
+				return &auth.CheckResponse{
+					Status: &rpcstatus.Status{
+						Code: int32(rpc.UNAUTHENTICATED),
+					},
+					HttpResponse: &auth.CheckResponse_DeniedResponse{
+						DeniedResponse: &auth.DeniedHttpResponse{},
+					},
+				}
+			}
+			accessToken = oauthToken.GetAccessToken()
+			common.Info.Println(">>>> Access token ", accessToken)
+		}
+	}
 
 	return &auth.CheckResponse{
 		Status: &rpcstatus.Status{
@@ -98,6 +122,7 @@ func checkResponse(backend string, basepath string) *auth.CheckResponse {
 				Headers: []*corev3.HeaderValueOption{
 					setHeader("host", backend, false),
 					setHeader(":path", basepath, false),
+					setAuthHeader(accessToken),
 				},
 			},
 		},
@@ -105,6 +130,11 @@ func checkResponse(backend string, basepath string) *auth.CheckResponse {
 }
 
 func setHeader(name string, value string, append bool) *corev3.HeaderValueOption {
+
+	if value == "" {
+		return nil
+	}
+
 	header := &corev3.HeaderValue{
 		Key:   name,
 		Value: value,
@@ -114,4 +144,11 @@ func setHeader(name string, value string, append bool) *corev3.HeaderValueOption
 		Header: header,
 		Append: &wrapperspb.BoolValue{Value: append},
 	}
+}
+
+func setAuthHeader(accessToken string) *corev3.HeaderValueOption {
+	if accessToken != "" {
+		return setHeader("authorization", strings.Join([]string{"Bearer", accessToken}, " "), false)
+	}
+	return nil
 }
