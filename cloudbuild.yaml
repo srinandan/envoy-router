@@ -27,6 +27,14 @@ steps:
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['run', 'deploy', 'envoy-router', '--image', 'gcr.io/$PROJECT_ID/envoy-router', '--region', '$LOCATION']
+  args: 
+  - 'run'
+  - 'deploy'
+  - 'envoy-router'
+  - '--image'
+  - 'gcr.io/$PROJECT_ID/envoy-router' 
+  - '--region'
+  - '$LOCATION'
+  - '--update-secrets=/etc/secrets/sa.json=google-service-account:1,/etc/routes/routes.json=envoy-router:1'
 images:
-- 'gcr.io/$PROJECT_ID/envoy-router'
+- 'gcr.io/$PROJECT_ID/envoy-router' 
