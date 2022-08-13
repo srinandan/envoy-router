@@ -24,6 +24,24 @@ steps:
 # Push the container image to Container Registry
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/envoy-router']
+# Deploy the routing file as a secret in secret manager
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+  - 'secrets'
+  - 'create'
+  - 'envoy-router'
+  - '--data-file=./server/tests/routes.json'
+  - '--locations=$LOCATION'
+# Deploy the Google Service Account as a secret in secret manager
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+  - 'secrets'
+  - 'create'
+  - 'google-service-account'
+  - '--data-file=./server/tests/sa.json'
+  - '--locations=$LOCATION'
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
