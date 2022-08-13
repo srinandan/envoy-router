@@ -18,9 +18,8 @@ envoy  version: c919bdec19d79e97f4f56e4095706f8e6a383f1c/1.22.2/Modified/RELEASE
 
 1. Client application sends a http request to Envoy
 2. Envoy is configured to call an `ext_authz` service. `ext_authz` service looks up a routing table to match the incoming request to a backend server. Despite using the `ext_authz` filter, no authorization is performed
-3. Envoy routes the http call to a backend (upstream) service
-4. If the routing table has upstream authentication configured, then `ext_auth` will generate a token and add (or replace) the `authorization` header
-5. Envoy can be configured to call an `ext_proc` service. `ext_proc` service inspects the response status from the upstream service and adds an http header if the call was successful.
+3. Envoy routes the http call to a backend (upstream) service. If the routing table has upstream authentication configured, then `ext_auth` will generate a token and add (or replace) the `authorization` header
+4. Envoy can be configured to call an `ext_proc` service. `ext_proc` service inspects the response status from the upstream service and adds an http header if the call was successful.
 
 NOTES:
 a. Using an external routing service is useful only when one requires a heavily custom routing logic (ex: inspecting parts of the payload)
@@ -54,7 +53,7 @@ There are three authentication profiles supported:
 
 * OFF = `0`: Do nothing, if an auth header is passed by the client, it is preserved
 * ACCESS_TOKEN = `1`: Uses a google service account, obtains an access token (every 25 mins)
-* OIDC_TOKEN = `2`: [WIP] Generates a Google OIDC token  
+* OIDC_TOKEN = `2`: [TBD] Generates a Google OIDC token  
 
 The prefix is removed from the request from sending to the upstream service
 
