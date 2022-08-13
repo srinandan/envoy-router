@@ -63,6 +63,9 @@ var serviceAccountPath string
 func getPrivateKey(privateKey string) (interface{}, error) {
 	pemPrivateKey := fmt.Sprintf("%v", privateKey)
 	block, _ := pem.Decode([]byte(pemPrivateKey))
+	if block == nil {
+		return nil, fmt.Errorf("Invalid format of private key")
+	}
 	privKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
 		common.Error.Println("error parsing Private Key: ", err)
@@ -118,7 +121,7 @@ func generateAccessToken(privateKey string) (string, error) {
 	token, err := generateJWT(privateKey)
 
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	form := url.Values{}
