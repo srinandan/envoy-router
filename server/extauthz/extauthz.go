@@ -32,6 +32,8 @@ import (
 	"github.com/srinandan/sample-apps/common"
 )
 
+const unAuthErrString = "Failed to obtain upstream access token"
+
 // inspired by https://github.com/salrashid123/envoy_external_authz/blob/master/authz_server/grpc_server.go
 
 // Register registers
@@ -104,7 +106,9 @@ func checkResponse(backend string, basepath string, a routes.Auth) *auth.CheckRe
 						Code: int32(rpc.UNAUTHENTICATED),
 					},
 					HttpResponse: &auth.CheckResponse_DeniedResponse{
-						DeniedResponse: &auth.DeniedHttpResponse{},
+						DeniedResponse: &auth.DeniedHttpResponse{
+							Body: unAuthErrString,
+						},
 					},
 				}
 			}
