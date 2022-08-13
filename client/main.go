@@ -44,7 +44,7 @@ func main() {
 	authorizationClient := auth.NewAuthorizationClient(conn)
 
 	callroute(ctx, authorizationClient, "/httpbin")
-	callroute(ctx, authorizationClient, "/postman")
+	callroute(ctx, authorizationClient, "/integrations")
 	callroute(ctx, authorizationClient, "/notfound")
 }
 
@@ -75,8 +75,9 @@ func callroute(ctx context.Context, authorizationClient auth.AuthorizationClient
 
 	fmt.Printf("Response was %d\n", checkResponse.Status.Code)
 
-	if _, ok := checkResponse.HttpResponse.(*auth.CheckResponse_DeniedResponse); ok {
+	if response, ok := checkResponse.HttpResponse.(*auth.CheckResponse_DeniedResponse); ok {
 		fmt.Println("Request was denied")
+		fmt.Printf("%v\n", response.DeniedResponse)
 	}
 
 	if response, ok := checkResponse.HttpResponse.(*auth.CheckResponse_OkResponse); ok {
