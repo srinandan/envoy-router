@@ -129,8 +129,8 @@ func processRequestHeaders(headers *proc.ProcessingRequest_RequestHeaders) *proc
 	}
 
 	if routing == "true" {
-		if backend, prefix, _, found := routes.GetRoute(path); found {
-			basepath := routes.ReplacePrefix(path, prefix)
+		if r, found := routes.GetRoute(path); found {
+			basepath := routes.ReplacePrefix(path, r.Prefix)
 			requestHeaders := &proc.HeadersResponse{
 				Response: &proc.CommonResponse{
 					HeaderMutation: &proc.HeaderMutation{
@@ -139,7 +139,7 @@ func processRequestHeaders(headers *proc.ProcessingRequest_RequestHeaders) *proc
 							// https://github.com/envoyproxy/envoy/blob/main/source/extensions/filters/http/ext_proc/mutation_utils.cc#L128
 							// this is the warning received in the logs:
 							// [2021-11-28 16:43:04.339][671420][debug][filter] [source/extensions/filters/http/ext_proc/mutation_utils.cc:63] Ignorning improper attempt to set header host
-							setHeader("host", backend, false),
+							setHeader("host", basepath, false),
 							setHeader(":path", basepath, false),
 						},
 					},

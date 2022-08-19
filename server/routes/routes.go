@@ -35,6 +35,7 @@ const (
 type routerule struct {
 	Name           string `json:"name,omitempty"`
 	Backend        string `json:"backend,omitempty"`
+	BackendPrefix  string `json:"backendPrefix,omitempty"`
 	Prefix         string `json:"prefix,omitempty"`
 	Authentication Auth   `json:"authentication,omitempty"`
 }
@@ -62,21 +63,29 @@ func ReadRoutesFile(routeFile string) error {
 	return nil
 }
 
-func GetRoute(basePath string) (backend string, prefix string, a Auth, notFound bool) {
+func GetRoute(basePath string) (r routerule, notFound bool) {
 	common.Info.Printf(">>>>> basepath %s", basePath)
 
 	for _, routeRule := range routeInfo.RouteRules {
 		matchStr := "^" + routeRule.Prefix + "(/[^/]+)*/?"
 		if ok, _ := regexp.MatchString(matchStr, basePath); ok {
 			common.Info.Printf(">>>>> basepath found. authentication is %d\n", routeRule.Authentication)
-			return routeRule.Backend, routeRule.Prefix, routeRule.Authentication, true
+			return routeRule, true
 		}
 	}
 	common.Info.Printf(">>>>> basepath not found\n")
-	return "", "", OFF, false
+	return r, false
 }
 
 func ReplacePrefix(basePath string, prefix string) string {
 	common.Info.Printf(">>>>> replace %s with %s", basePath, strings.Replace(basePath, prefix, "", 1))
 	return strings.Replace(basePath, prefix, "", 1)
+}
+
+func GetFullPath(basePath string, backendPrefix string) string {
+	//join the backendPrefix
+	if backendPrefix != "" {
+		return strings.Join([]string{basePath, backendPrefix}, "")
+	}
+	return basePath
 }

@@ -44,7 +44,7 @@ func main() {
 	authorizationClient := auth.NewAuthorizationClient(conn)
 
 	callroute(ctx, authorizationClient, "/httpbin")
-	callroute(ctx, authorizationClient, "/integrations")
+	callroute(ctx, authorizationClient, "/integrations/workflow")
 	callroute(ctx, authorizationClient, "/notfound")
 }
 

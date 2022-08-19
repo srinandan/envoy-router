@@ -68,9 +68,11 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 			common.Info.Printf(">>>> Payload: %s\n", req.Attributes.Request.Http.Body)
 		}
 
-		if backend, prefix, auth, found := routes.GetRoute(req.Attributes.Request.Http.Path); found {
-			basepath := routes.ReplacePrefix(req.Attributes.Request.Http.Path, prefix)
-			return checkResponse(backend, basepath, auth), nil
+		if r, found := routes.GetRoute(req.Attributes.Request.Http.Path); found {
+			basepath := routes.ReplacePrefix(req.Attributes.Request.Http.Path, r.Prefix)
+			basepath = routes.GetFullPath(basepath, r.BackendPrefix)
+			common.Info.Printf(">>>> Path: %s\n", basepath)
+			return checkResponse(r.Backend, basepath, r.Authentication), nil
 		} else {
 			return checkNotFoundResponse(), nil
 		}

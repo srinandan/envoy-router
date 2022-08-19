@@ -13,9 +13,7 @@
 # limitations under the License.
 
 
-# gcloud config set compute/region us-west1
-# gcloud config set project foo
-# gcloud builds submit --config=cloudbuild.yaml
+# gcloud builds submit --config=cloudbuild.yaml --region=us-west1 . 
 
 steps:
 # Build the container image
@@ -24,24 +22,6 @@ steps:
 # Push the container image to Container Registry
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/envoy-router']
-# Deploy the routing file as a secret in secret manager
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: gcloud
-  args:
-  - 'secrets'
-  - 'create'
-  - 'envoy-router'
-  - '--data-file=./server/tests/routes.json'
-  - '--locations=$LOCATION'
-# Deploy the Google Service Account as a secret in secret manager
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: gcloud
-  args:
-  - 'secrets'
-  - 'create'
-  - 'google-service-account'
-  - '--data-file=./server/tests/sa.json'
-  - '--locations=$LOCATION'
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
@@ -56,5 +36,7 @@ steps:
   - '--region'
   - '$LOCATION'
   - '--update-secrets=/etc/secrets/sa.json=google-service-account:1,/etc/routes/routes.json=envoy-router:1'
+#  - '--ingress=internal-and-cloud-load-balancing'
+  - '--ingress=internal'
 images:
 - 'gcr.io/$PROJECT_ID/envoy-router' 

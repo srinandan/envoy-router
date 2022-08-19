@@ -16,12 +16,14 @@
         "name": "httpbin",
         "prefix": "/httpbin",
         "backend": "httpbin.org",
+        "backendPrefix": "/get",
         "authentication": 0
       },
       {
         "name": "integration",
-        "prefix": "/integrations",
+        "prefix": "/integrations/workflow",
         "backend": "us-integrations.googleapis.com",
+        "backendPrefix": "/v1/projects/nandanks-serverless/locations/us/products/apigee/integrations/workflow:execute",
         "authentication": 1
       },
       {
